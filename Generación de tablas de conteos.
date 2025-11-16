@@ -1,2 +1,32 @@
-# a partir de los archivos de cobertura obtenidos mediante samtools coverage, se extraera la columna de rname y numreads
-awk '{print #1"\t"#4}' 
+# A partir de los archivos de cobertura obtenidos mediante samtools coverage, se extraera la columna de rname y numreads
+# rname contiene los ID de los genes codificantes y numreads contiene la cantidad de veces que se mapeo ese gen.
+awk '{print #1"\t"#4}' R1_GOM2_D0.fastq.gz.sorted.bam.coverage > cov_GOM2_D0.fastq.gz.sorted.bam.coverage
+
+# Ahora debemos trasladarnos a R, y fijar como nuestra ruta predeterminada, la ruta donde tenemos contenidos los archivos
+setwd /ruta/de/nuestro/interes/
+
+# ejecutamos el siguiente script para generar nuestras tablas de conteos el cual es un script modificado 
+# a apartir de uno previamente publicado por Godínez (https://github.com/yahelGB/M.Sc_thesis.git).
+genera_tabla_conteos<-function(fnPath,fnExt){
+fnPattern=paste(fnPath, fnExt,"$",sep="",collapse="")
+fnLista_archivos=dir(fnPath, fnExt)
+print(fnLista_archivos)
+fnNomExperimentos = sub(fnExt,'', fnLista_archivos)
+fnTablaConteos = data.frame(matrix(vector(), 0, length(fnLista_archivos)))
+names(fnTablaConteos)<-fnNomExperimentos
+for(i in fnNomExperimentos)
+{
+print(paste(fnPath, i, fnExt, sep = ""))
+fnColExp<-read.delim(paste(fnPath, i, fnExt, sep = ""), header = T,row.names = 1)
+print(head(fnColExp))
+fnTablaConteos[row.names(fnColExp),i]<-fnColExp[,1]
+}
+fnTablaConteos[is.na(fnTablaConteos)]=0
+fnTablaConteos<-fnTablaConteos[rowSums(fnTablaConteos)>0,]
+return(fnTablaConteos)
+}
+myPath<-"/scratch/marlaa/RNAseq/raw_data/tabla_conteos/" # path to files
+myExt<-".fastq.gz.sorted.bam.coverage" # files extension
+t_d_c<-genera_tabla_conteos(myPath,myExt)
+t_d_c
+write.table(t_d_c,"/home/marlaa/RNAseq/tabla_conteos/tabla_conteos.txt", sep="\t", quote=F)
