@@ -1,2 +1,2 @@
 # a partir de los archivos de cobertura obtenidos mediante samtools coverage, se extraera la columna de rname y numreads
-awk '{print #1"\t"#}'
+awk '{print #1"\t"#4}' 
