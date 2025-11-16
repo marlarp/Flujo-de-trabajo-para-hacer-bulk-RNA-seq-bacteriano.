@@ -1,0 +1,23 @@
+# en este caso, tenemos el genoma secuenciado y publicado en NCBI, ejecutamos el siguiente comando el cual tambien puede ser encontrado 
+# en el apartado de "Genome assembly".
+datasets download genome accession GCF_009737025.1 --include gff3,rna,cds,protein,genome,seq-report
+
+# descomprimimos el set.
+unzip ncbi_dataset.zip
+
+# ya que tenemos el genoma en una carpeta de nuestra preferencia y hemos descargado Bowtie2, creamos una carpeta donde querramos que se
+# almacene el indice del genoma que vamos a crear, este sera necesario para realizar el alineamiento.
+# ejecutamos el siguiente comando para crear el indice.
+bowtie2-build   GCF_009737025.1_ASM973702v1_cds_from_genomic.fna.gz   index_CDS_GOM2/index_test
+
+# para realizar el alineamiento con Bowtie2, se indica el tiempo (-t) y (-x) los indices contra los que se va a alinear.
+# los nucleos a utilizarse (-p) esta vez señale que fueran 11 nucleos (todos).  
+# posteriormente, tienes que indicar con (—fr) el forward y el reverse, primero colocaras el forward poraque asi viene descrito f y despues r, 
+# colocaras —fr -1 y escribiras la ruta completa de donde se encuentra tu archivo pareado 1 (forward), 
+# el mismo caso para el reverse, debes colocar -2 y la ruta de donde este el archivo pareado 2 (reverse).
+bowtie2 -t -x index_CDS_GOM2/index_test -p 11 --fr -1 /scratch/marlaa/GOM2_RNAseq_IMP/raw_data/R1_GOM2_D0_2_S40_R1_001.fastq.gz \
+-2 /scratch/marlaa/GOM2_RNAseq_IMP/raw_data/R1_GOM2_D0_2_S40_R2_001.fastq.gz | samtools view -Sb -@ 11 | samtools sort -@ 11 -o R1_GOM2_D0.fastq.gz.sorted.bam
+
+# para realizar la cuantificacion de la expresion génica podemos obtenerlas directamente del comando "coverage" contenido en samtools.
+# samtools coverage es una herramienta de línea de comandos que calcula la proporción de un genoma de referencia que está cubierta por lecturas de secuenciación.
+samtools coverage R1_GOM2_D0.fastq.gz.sorted.bam > R1_GOM2_D0.fastq.gz.sorted.bam.coverage
