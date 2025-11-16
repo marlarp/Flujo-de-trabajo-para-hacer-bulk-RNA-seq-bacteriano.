@@ -1,0 +1,2 @@
+#realizar este proceso con todos los archivos de secuenciacion.
+fastqc R1_GOM2_D0_2_S40_R1_001.fastq.gz
