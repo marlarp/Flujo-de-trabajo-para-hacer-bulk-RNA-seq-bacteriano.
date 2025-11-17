@@ -1,0 +1,50 @@
+# para extraer los genes unicos podemos realizarlo en R, generar un diagrama de venn y separar los genes unicos por condicion mediante su comparacion con el control. 
+
+# sube tus archivos y conviertelos en vectores
+
+citrato_vs_control  <- scan("controlvscitrato_Intesrsect_TOP_IDs.txt",  what="", sep="\n")
+impranil_vs_control <- scan("controlvsimpranil_Intesrsect_TOP_IDs.txt", what="", sep="\n")
+
+######## otros sets ##########
+impranil <- c(impranil_vs_control)
+citrato  <- c(citrato_vs_control)
+
+# para elaborar un diagrama de Venn debemos descargar y abrir las librerias grid, futile.logger y VennDiagram.
+library(grid)
+library(futile.logger)
+
+library(VennDiagram)
+venn.plot <- venn.diagram(
+  x = list(
+    Impranil = impranil,
+    Citrato  = citrato
+  ),
+  filename = NULL,  
+  fill = c("olivedrab2", "orange"),
+  alpha = 0.5,
+  cex = 1.5,
+  cat.cex = 1.5,
+  cat.col = c("black", "black"),
+  main = "Venn Diagram - Genes diferencialmente expresados."
+)
+
+# Mostrar
+grid::grid.newpage()
+grid::grid.draw(venn.plot)
+filename = NULL  
+
+# para obtener las listas:
+genes_unicos_impranil <- setdiff(impranil, citrato)
+length(genes_unicos_impranil)
+writeLines(genes_unicos_impranil, "genes_unicos_impranil.txt")
+head(genes_unicos_impranil)
+
+genes_unicos_citrato <- setdiff(citrato, impranil)
+length(genes_unicos_citrato)
+writeLines(genes_unicos_citrato, "genes_unicos_citrato.txt")
+head(genes_unicos_citrato)
+
+genes_compartidos <- intersect(impranil, citrato)
+length(genes_compartidos)
+writeLines(genes_compartidos, "genes_compartidos.txt")
+head(genes_compartidos)
