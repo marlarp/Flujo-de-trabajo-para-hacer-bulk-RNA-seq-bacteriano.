@@ -1,32 +1,63 @@
 # A partir de los archivos de cobertura obtenidos mediante samtools coverage, se extraera la columna de rname y numreads
 # rname contiene los ID de los genes codificantes y numreads contiene la cantidad de veces que se mapeo ese gen.
-awk '{print #1"\t"#4}' R1_GOM2_D0.fastq.gz.sorted.bam.coverage > cov_GOM2_D0.fastq.gz.sorted.bam.coverage
+awk '{print #1"\t"#4}' R1_GOM2_D0.fastq.gz.sorted.bam.coverage > numreads_GOM2_D0.fastq.gz.sorted.bam.coverage
+
+------------------------------------------------------------------------------------------------------------------------------------
 
 # Ahora debemos trasladarnos a R, y fijar como nuestra ruta predeterminada, la ruta donde tenemos contenidos los archivos
-setwd /ruta/de/nuestro/interes/
+setwd /ruta/de/nuestro/interés/
+
+------------------------------------------------------------------------------------------------------------------------------------
 
 # ejecutamos el siguiente script para generar nuestras tablas de conteos el cual es un script modificado 
-# a apartir de uno previamente publicado por Godínez (https://github.com/yahelGB/M.Sc_thesis.git).
-genera_tabla_conteos<-function(fnPath,fnExt){
-fnPattern=paste(fnPath, fnExt,"$",sep="",collapse="")
-fnLista_archivos=dir(fnPath, fnExt)
+# a apartir de uno previamente publicado por Godínez-Bautista (https://github.com/yahelGB/M.Sc_thesis.git).
+# primero creamos una función que tendra por nombre "genera_tabla_conteos", la cual estará contenida por una extensión (FnExt) que es .coverage 
+# y por la ruta (fnPath) la cual contendrá todos los archivos ".coverage"
+
+genera_tabla_conteos <- function(fnPath, fnExt){
+
+# mod 1: list.files() busca todos los archivos dentro de la carpeta (fnPath) que terminen con una cierta extensión (fnExt). 
+# fnExt = ".coverage", buscará todos los archivos que terminen así.
+# paste0(fnExt, "$") crea el patrón de búsqueda: el signo $ significa “al final del nombre”.
+#print(fnLista_archivos) muestra los nombres encontrados, para verificar que los detectó correctamente.
+
+fnLista_archivos <- list.files(path = fnPath, pattern = paste0(fnExt, "$"))
 print(fnLista_archivos)
-fnNomExperimentos = sub(fnExt,'', fnLista_archivos)
-fnTablaConteos = data.frame(matrix(vector(), 0, length(fnLista_archivos)))
-names(fnTablaConteos)<-fnNomExperimentos
-for(i in fnNomExperimentos)
-{
-print(paste(fnPath, i, fnExt, sep = ""))
-fnColExp<-read.delim(paste(fnPath, i, fnExt, sep = ""), header = T,row.names = 1)
+  
+# sub() reemplaza una parte del texto. Aquí se usa para quitar la extensión ".coverage" de cada nombre.
+
+fnNomExperimentos <- sub(fnExt, '', fnLista_archivos)
+  
+# Crear data frame vacío con una columna por muestra
+fnTablaConteos <- data.frame(matrix(nrow = 0, ncol = length(fnLista_archivos)))
+names(fnTablaConteos) <- fnNomExperimentos
+  
+# Recorrer los archivos
+for (i in seq_along(fnNomExperimentos)) {
+archivo <- file.path(fnPath, fnLista_archivos[i])  # a file.path para rutas seguras
+print(archivo)
+    
+# ORRECCIÓN 2: usar header = FALSE porque los archivos no tienen encabezado
+fnColExp <- read.delim(archivo, header = FALSE, row.names = 1)
 print(head(fnColExp))
-fnTablaConteos[row.names(fnColExp),i]<-fnColExp[,1]
+    
+# Agregar la columna al data frame final
+fnTablaConteos[row.names(fnColExp), fnNomExperimentos[i]] <- fnColExp[, 1]
 }
-fnTablaConteos[is.na(fnTablaConteos)]=0
-fnTablaConteos<-fnTablaConteos[rowSums(fnTablaConteos)>0,]
+  
+# Llenar los NA con ceros
+fnTablaConteos[is.na(fnTablaConteos)] <- 0
+  
+# Filtrar genes con al menos una lectura
+fnTablaConteos <- fnTablaConteos[rowSums(fnTablaConteos) > 0, ]
+  
 return(fnTablaConteos)
 }
-myPath<-"/scratch/marlaa/RNAseq/raw_data/tabla_conteos/" # path to files
-myExt<-".fastq.gz.sorted.bam.coverage" # files extension
+
+myPath<-"/scratch/marlaa/GOM2_RNAseq_IMP/raw_data/alignment_cds/tabla_conteos/" # path to files
+myExt<-".coverage" # es la extension de nuestros archivos.
 t_d_c<-genera_tabla_conteos(myPath,myExt)
 t_d_c
 write.table(t_d_c,"/home/marlaa/RNAseq/tabla_conteos/tabla_conteos.txt", sep="\t", quote=F)
+
+names(t_d_c)
