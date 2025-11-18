@@ -4,19 +4,19 @@ awk '{print #1"\t"#4}' R1_GOM2_D0.fastq.gz.sorted.bam.coverage > numreads_GOM2_D
 
 ------------------------------------------------------------------------------------------------------------------------------------
 
-# Ahora debemos trasladarnos a R, y fijar como nuestra ruta predeterminada, la ruta donde tenemos contenidos los archivos
+# Ahora debemos trasladarnos a R, y fijar como nuestra ruta predeterminada, la ruta donde tenemos contenidos los archivos de cobertura.
 setwd /ruta/de/nuestro/interés/
 
 ------------------------------------------------------------------------------------------------------------------------------------
 
 # ejecutamos el siguiente script para generar nuestras tablas de conteos el cual es un script modificado 
 # a apartir de uno previamente publicado por Godínez-Bautista (https://github.com/yahelGB/M.Sc_thesis.git).
-# primero creamos una función que tendra por nombre "genera_tabla_conteos", la cual estará contenida por una extensión (FnExt) que es .coverage 
+# Primer paso: primero creamos una función que tendra por nombre "genera_tabla_conteos", la cual estará contenida por una extensión (FnExt) que es .coverage 
 # y por la ruta (fnPath) la cual contendrá todos los archivos ".coverage"
 
 genera_tabla_conteos <- function(fnPath, fnExt){
 
-# mod 1: list.files() busca todos los archivos dentro de la carpeta (fnPath) que terminen con una cierta extensión (fnExt). 
+# Segundo paso: list.files() busca todos los archivos dentro de la carpeta (fnPath) que terminen con una cierta extensión (fnExt). 
 # fnExt = ".coverage", buscará todos los archivos que terminen así.
 # paste0(fnExt, "$") crea el patrón de búsqueda: el signo $ significa “al final del nombre”.
 #print(fnLista_archivos) muestra los nombres encontrados, para verificar que los detectó correctamente.
@@ -24,40 +24,62 @@ genera_tabla_conteos <- function(fnPath, fnExt){
 fnLista_archivos <- list.files(path = fnPath, pattern = paste0(fnExt, "$"))
 print(fnLista_archivos)
   
-# sub() reemplaza una parte del texto. Aquí se usa para quitar la extensión ".coverage" de cada nombre.
+# Tercer paso: sub() reemplaza una parte del texto. Aquí se usa para quitar la extensión ".coverage" de cada nombre.
 
 fnNomExperimentos <- sub(fnExt, '', fnLista_archivos)
   
-# Crear data frame vacío con una columna por muestra
+# Cuarto paso: Aquí se crea una tabla vacía, con: 0 filas (por ahora no sabemos cuántos genes habrá)
+# Luego, names(fnTablaConteos) le pone los nombres de las columnas (uno por muestra). 
+
 fnTablaConteos <- data.frame(matrix(nrow = 0, ncol = length(fnLista_archivos)))
 names(fnTablaConteos) <- fnNomExperimentos
   
-# Recorrer los archivos
+# Quinto paso: "for" crea un bucle, que repite las mismas instrucciones para cada archivo ".coverage".
+# seq_along(fnNomExperimentos) genera una secuencia de números (1, 2, 3, …) para recorrer todas las muestras.
+# file.path() construye correctamente la ruta completa del archivo.
+
 for (i in seq_along(fnNomExperimentos)) {
-archivo <- file.path(fnPath, fnLista_archivos[i])  # a file.path para rutas seguras
+archivo <- file.path(fnPath, fnLista_archivos[i])
 print(archivo)
     
-# ORRECCIÓN 2: usar header = FALSE porque los archivos no tienen encabezado
+# Sexto paso: read.delim() lee archivos de texto separados por tabulaciones (tab).
+# header = FALSE significa que los archivos no tienen títulos de columnas en la primera fila.
+# row.names = 1 usa la primera columna del archivo como los nombres de las filas
+
 fnColExp <- read.delim(archivo, header = FALSE, row.names = 1)
 print(head(fnColExp))
     
-# Agregar la columna al data frame final
+# Septimo paso: Aquí se “pega” la columna de conteos dentro de la tabla general (fnTablaConteos).
+# row.names(fnColExp) son los nombres de los genes.
+# fnColExp[, 1] son los números de conteo.
+# fnNomExperimentos[i] indica en qué columna (muestra) se deben colocar
+
 fnTablaConteos[row.names(fnColExp), fnNomExperimentos[i]] <- fnColExp[, 1]
 }
-  
-# Llenar los NA con ceros
+
+# Octavo paso: Si un gen falta en una muestra, su valor queda como NA (vacío).
+# Esta línea cambia todos los NA por 0 para que el análisis sea consistente.
+
 fnTablaConteos[is.na(fnTablaConteos)] <- 0
   
-# Filtrar genes con al menos una lectura
+# Noveno paso: Si un gen tiene 0 lecturas en todas las muestras, se elimina de la tabla y return devuelve la tabla final, indicamos el path y la ext.
+
 fnTablaConteos <- fnTablaConteos[rowSums(fnTablaConteos) > 0, ]
   
 return(fnTablaConteos)
 }
 
-myPath<-"/scratch/marlaa/GOM2_RNAseq_IMP/raw_data/alignment_cds/tabla_conteos/" # path to files
+
+myPath<-"/scratch/marlaa/RNAseq/quantification_data/tabla_conteos/" # la ruta donde estan los archivos de cobertura.
 myExt<-".coverage" # es la extension de nuestros archivos.
+
+# Decimo paso: se guarda el resultado en t_d_c (la tabla de conteos final).
+
 t_d_c<-genera_tabla_conteos(myPath,myExt)
 t_d_c
+
+# Onceavo paso: se escribe la tabla en una ubicacion señalada.
+
 write.table(t_d_c,"/home/marlaa/RNAseq/tabla_conteos/tabla_conteos.txt", sep="\t", quote=F)
 
 names(t_d_c)
