@@ -1,3 +1,14 @@
-# una vez que obtienes las listas en R, las listas de los genes unicos obtenidos por 
+# una vez que obtienes las listas en R, las listas de los genes unicos obtenidos por establecer la diferencia entre las condiciones de estudio
+# por ej:
+genes_unicos_impranil <- setdiff(impranil, citrato)
+length(genes_unicos_impranil)
+writeLines(genes_unicos_impranil, "genes_unicos_impranil.txt")
+head(genes_unicos_impranil)
 
+# Se regresa a la terminal, donde tengas colocado tu archivo de genes unicos, y para obtener la direccionalidad de estos,
+# buscas en el intersecto donde estan contenidos todos los genes de la lista de genes unicos, 
+# fgrep -f busca cualquier línea que contenga el primer archivo dentro del segundo como cadenas de texto literales.
+# se pipea el resultado en un segundo proceso que busque dentro de esta salida, aquellos que contengan en su linea "UP_impranil"
+# este resultado se pipea nuevamente para eliminar todo lo que venga despues del segundo "_" encontrado en la linea
+# finalmente este resultado se guarda en un archivo.
 fgrep -f genes_unicos_impranil.txt controlvsimpranil_Intersect.txt | grep UP_impranil | cut -d'_' -f1-2 > unicos_impranil_UP.txt
