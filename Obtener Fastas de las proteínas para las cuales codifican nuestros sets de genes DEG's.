@@ -1,0 +1,3 @@
+# en este caso fue posible hacer una busqueda en NCBI por el identificador que tienen por defecto, ya que de esta forma fue anotado el genoma
+# de la bacteria del presente trabajo.
+xargs -I {} sh -c 'efetch -db protein -id {} -format fasta' < unicos_impranil_UP.txt >> unicos_impranil_UP.fasta
