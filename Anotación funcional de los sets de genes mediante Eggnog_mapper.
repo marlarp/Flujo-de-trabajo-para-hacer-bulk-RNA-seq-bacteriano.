@@ -1,0 +1,7 @@
+# Este comando (1) ejecuta el programa emapper.py desde un entorno de conda de EggNOG-mapper.
+# Se descargaron  las bases de datos de Eggnog manualmente y se  guardaron en una ubicacion en especifico quue vamos a especificar para que realice su busqueda.
+# Se tomo el archivo en fasta de los genes unicos de impranil como entrada
+# y especificamos la salida con un nombre que decidamos asignar.
+/home/marlaa/miniconda3/envs/eggnogmapper-new/bin/emapper.py --data_dir /scratch/marlaa/eggnog_databases \
+-i /home/marlaa/RNAseq_GOM2_impranil/intento_1_tabla_conteos/degs_analysis_2_log2FC_1/1_intersectos_deseq2/genes_unicos_fastas/genes_unicos_impranil.fasta \ 
+-o genes_unicos_impranil
