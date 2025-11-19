@@ -1,1 +1,3 @@
-# una vez que obtienes las listas en R, 
+# una vez que obtienes las listas en R, las listas de los genes unicos obtenidos por 
+
+fgrep -f genes_unicos_impranil.txt controlvsimpranil_Intersect.txt | grep UP_impranil | cut -d'_' -f1-2 > unicos_impranil_UP.txt
